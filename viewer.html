@@ -106,9 +106,10 @@
       background: var(--charcoal);
     }
 
-    embed {
+    #pdf-embed {
       width: 100%;
       height: 100%;
+      border: none;
       border-radius: 4px;
       box-shadow: 0 10px 40px rgba(0,0,0,0.5);
     }
@@ -122,6 +123,47 @@
       border: 1px solid rgba(139,58,30,0.3);
       border-radius: 4px;
       margin-top: 2rem;
+    }
+
+    /* Mobile fallback — iframes block PDFs on most mobile browsers */
+    .mobile-fallback {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      height: 100%;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .mobile-fallback p {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 300;
+      color: rgba(242,237,228,0.6);
+      line-height: 1.6;
+    }
+
+    .mobile-fallback a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 1rem 2rem;
+      border: 1px solid rgba(201,169,110,0.4);
+      transition: all 0.3s;
+    }
+
+    .mobile-fallback a:hover {
+      background: rgba(201,169,110,0.1);
+      border-color: var(--gold);
     }
 
     @media (max-width: 599px) {
@@ -151,6 +193,10 @@
         padding: 1rem;
         height: calc(100vh - 140px);
       }
+
+      /* Hide iframe on mobile, show fallback instead */
+      #pdf-embed { display: none; }
+      .mobile-fallback { display: flex; }
     }
   </style>
 </head>
@@ -165,12 +211,15 @@
 </div>
 
 <div id="pdf-container">
-  <embed id="pdf-embed" src="" type="application/pdf" />
+  <iframe id="pdf-embed" src="" title="PDF Viewer"></iframe>
+  <div class="mobile-fallback" id="mobile-fallback">
+    <p>PDF preview isn't supported on mobile browsers.</p>
+    <a href="#" id="mobile-download">Download to view →</a>
+  </div>
   <div id="error-msg" class="error-message" style="display: none;"></div>
 </div>
 
 <script>
-  // Get PDF path from URL parameter
   const params = new URLSearchParams(window.location.search);
   const pdfPath = params.get('pdf');
   const pdfTitle = params.get('title') || 'PDF';
@@ -178,25 +227,21 @@
   const embed = document.getElementById('pdf-embed');
   const titleEl = document.getElementById('pdf-title');
   const downloadBtn = document.getElementById('download-btn');
+  const mobileDownload = document.getElementById('mobile-download');
   const errorMsg = document.getElementById('error-msg');
-  const container = document.getElementById('pdf-container');
 
   if (pdfPath) {
-    embed.src = pdfPath;
+    embed.src = pdfPath + '#toolbar=1&view=FitH';
     downloadBtn.href = pdfPath;
     downloadBtn.download = pdfPath.split('/').pop();
+    mobileDownload.href = pdfPath;
+    mobileDownload.download = pdfPath.split('/').pop();
     titleEl.textContent = pdfTitle;
-
-    // Handle PDF loading errors
-    embed.onerror = function() {
-      errorMsg.textContent = 'Unable to load PDF. The file may be corrupted or in an unsupported format.';
-      errorMsg.style.display = 'block';
-      embed.style.display = 'none';
-    };
   } else {
     errorMsg.textContent = 'No PDF specified. Please use the portfolio to select a PDF.';
     errorMsg.style.display = 'block';
     embed.style.display = 'none';
+    document.getElementById('mobile-fallback').style.display = 'none';
   }
 </script>
 
